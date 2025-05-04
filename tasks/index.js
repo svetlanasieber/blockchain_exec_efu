@@ -20,28 +20,28 @@ task("deploy", "Deploys CustomToken and Crowdsale contracts")
     const tokensForSale = hre.ethers.parseUnits(taskArgs.tokensForSale, 8);
     const feeReceiver = taskArgs.feeReceiver || deployer.address;
 
-    // CustomToken
+   
     const CustomToken = await hre.ethers.getContractFactory("CustomToken");
     const customToken = await CustomToken.deploy();
     await customToken.waitForDeployment();
     console.log("CustomToken deployed to:", await customToken.getAddress());
 
-    // Crowdsale
+  
     const Crowdsale = await hre.ethers.getContractFactory("Crowdsale");
     const crowdsale = await Crowdsale.deploy(deployer.address);
     await crowdsale.waitForDeployment();
     console.log("Crowdsale deployed to:", await crowdsale.getAddress());
 
-    // Calculate timestamps
+   
     const latestBlock = await hre.ethers.provider.getBlock("latest");
     const startTime = latestBlock.timestamp + startOffset;
     const endTime = startTime + duration;
 
-    // Approve tokens for Crowdsale
+    
     await customToken.approve(await crowdsale.getAddress(), tokensForSale);
     console.log("Approved tokens for Crowdsale");
 
-    // Initialize Crowdsale
+  
     await crowdsale.initialize(
       startTime,
       endTime,
@@ -52,16 +52,16 @@ task("deploy", "Deploys CustomToken and Crowdsale contracts")
     );
     console.log("Initialized Crowdsale");
 
-    // Verify contracts if on Sepolia
+    
     if (hre.network.name === "sepolia") {
       console.log("\nVerifying contracts on Sepolia...");
 
-      // Wait for a few block confirmations
+   
       console.log("Waiting for block confirmations...");
       await customToken.deploymentTransaction().wait();
       await crowdsale.deploymentTransaction().wait();
 
-      // Verify CustomToken
+      
       try {
         await hre.run("verify:verify", {
           address: await customToken.getAddress(),
@@ -72,7 +72,7 @@ task("deploy", "Deploys CustomToken and Crowdsale contracts")
         console.log("CustomToken verification failed:", error.message);
       }
 
-      // Verify Crowdsale
+      
       try {
         await hre.run("verify:verify", {
           address: await crowdsale.getAddress(),
@@ -103,21 +103,21 @@ task("buy", "Buy tokens from the Crowdsale contract")
     const [signer] = await hre.ethers.getSigners();
     console.log("Buying tokens with account:", signer.address);
 
-    // Parse parameters
+  
     const crowdsaleAddress = taskArgs.crowdsale;
     const ethAmount = hre.ethers.parseEther(taskArgs.amount);
     const receiver = taskArgs.receiver || signer.address;
 
-    // Get contract instance
+   
     const Crowdsale = await hre.ethers.getContractFactory("Crowdsale");
     const crowdsale = Crowdsale.attach(crowdsaleAddress);
 
-    // Get token address and create token instance for balance checking
+    
     const tokenAddress = await crowdsale.token();
     const CustomToken = await hre.ethers.getContractFactory("CustomToken");
     const token = CustomToken.attach(tokenAddress);
 
-    // Get initial balances
+ 
     const initialTokenBalance = await token.balanceOf(receiver);
     const initialEthBalance = await hre.ethers.provider.getBalance(receiver);
 
@@ -132,16 +132,16 @@ task("buy", "Buy tokens from the Crowdsale contract")
       hre.ethers.formatUnits(initialTokenBalance, 8)
     );
 
-    // Execute purchase
+   
     console.log("\nExecuting purchase...");
     const tx = await crowdsale.buyShares(receiver, { value: ethAmount });
     await tx.wait();
 
-    // Get final balances
+  
     const finalTokenBalance = await token.balanceOf(receiver);
     const finalEthBalance = await hre.ethers.provider.getBalance(receiver);
 
-    // Calculate changes
+   
     const tokenChange = finalTokenBalance - initialTokenBalance;
     const ethChange = finalEthBalance - initialEthBalance;
 
@@ -154,7 +154,6 @@ task("buy", "Buy tokens from the Crowdsale contract")
       hre.ethers.formatUnits(finalTokenBalance, 8)
     );
 
-    // Get sale status
     const tokensSold = await crowdsale.tokensSold();
     const tokensForSale = await crowdsale.tokensForSale();
 
