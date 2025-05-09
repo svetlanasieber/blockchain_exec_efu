@@ -160,10 +160,4 @@ contract Crowdsale is Ownable {
     }
 }
 
-// 1 ETH = price = 50
-// 0.1 ETH = 1 * 50 / 10 = 5
 
-// 1 ETH * 50 / 1 ETH = 50
-// 2 ETH * 50 / 1 ETH = 100
-// 0.5 ETH * 50 / 1 ETH = 25 * 10 ** 18
-// 0.00001 ETH  * 50 / 1 ETH =
